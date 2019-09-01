@@ -1,0 +1,179 @@
+---
+title: "ST2137 Tutorial 2"
+author: "Tay Yong Qiang"
+date: "31 August 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+```
+
+## Data sets
+
+There are five variables in the `tut2htwtfixed.txt` dataset. They are
+
+- `id`: Identity of the subject (Columns 1-3)
+- `gender`: Gender of the subject (Column 4)
+- `height`: Height of the subject in cm (Columns 5-7)
+- `weight`: Weight of the subject in kg (Columns 8-9)
+- `siblings`: Number of siblings of the subject (Column 10)
+
+`tut2test.csv` is an Excel file with comma-separated values. There are two variables in it. They are
+
+- `id`: Identity of the subject
+- `test`: Test score of the subject
+
+##My solutions
+
+1. Create an R data frame `htwt2` by importing the `tut2htwtfixed.txt` file into the R.
+
+```{r echo = c(-1,-4)}
+setwd("C:/Users/Tay/Downloads/NUS/ST/ST2137/Tutorials/Tutorial 2/Data set")
+varnames = c("id", "gender", "height", "weight", "siblings")
+htwt2 <- read.fwf("tut2htwtfixed.txt", widths = c(3,1,3,2,1), header = F, col.names = varnames)
+```
+For an example, here are the first 5 rows of `htwt2`:
+```{r}
+htwt2[1:5,]
+```
+
+2. Based on `htwt2`, create an R data frame `htwt2m` which contains the data for all the male subjects. How many males are there in the data frame `htwt2`?
+
+```{r message = F}
+attach(htwt2)
+htwt2m <- htwt2[gender == "M",]
+dim(htwt2m)
+```
+There are 48 males in `htwt2`.
+Note that it is important to `attach()` the data to make the variables accessible by name. Without this step, it would not make sense to call 'gender' in the next command.
+
+3. Import `tut2test.csv` into the R. Merge the two datasets `htwt2` and `tut2test`. Let us call this new R data frame `htwttest2`. Identify individuals whose height is greater than 182 cm. What are the test scores of subjects whose height is greater than 182 cm?
+
+```{r echo = c(-1), message = F}
+setwd("C:/Users/Tay/Downloads/NUS/ST/ST2137/Tutorials/Tutorial 2/Data set")
+tut2test <- read.csv("tut2test.csv", header = T)
+htwttest2 <- merge(htwt2, tut2test, by = "id")
+attach(htwttest2)
+higherThan182 <- htwttest2[height > 182,]
+higherThan182
+```
+
+4. Suppose that there was an error in the weight of the Subject 210 in the text file. Obtain a new R data frame `htwttest2remo` by removing the record related to the Subject 210 from the data frame `htwttest2`.
+
+```{r echo = c(-1,-3)}
+start <- htwttest2[1,1]
+htwttest2remo <- htwttest2[id != 210,]
+htwttest2remo[(210-2-start):(210+2-start),]
+```
+Subject 210 has been removed!
+
+5. After checking with the Subject 210, we found out that his actual weight should be 68 kg instead of 88 kg. Modify the R data frame ``htwttest2` by rectifying the mistake.
+
+```{r echo = c(-3)}
+htwttest2remo <- htwttest2[id != 210,]
+htwttest2[210 - htwttest2[1,1] + 1, 4] <- 68
+htwttest2[(210-start+1),]
+```
+The weight has been changed.
+
+6. Who is the second tallest female in this group? What are her height, weight, and test score?
+
+```{r message = F}
+htwttest2female <- htwttest2[gender == "F",]
+attach(htwttest2female)
+htwttest2female[rev(order(height)),][2, c("height", "weight", "test")]
+```
+
+7. Create a new variable called ``grade` using the following rules: (1) grade = “A” if test ≥ 80, (2) grade = “B” if 70 ≤ test < 80, (3) grade = “C” if 60 ≤ test < 70, (4) grade = “D” if 50 ≤ test < 60 and (5) grade = “F” if test < 50. How many subjects who have “F” grade are there?
+
+```{r message = F}
+htwttest2["grade"] <- ""
+attach(htwttest2)
+for (i in 1:nrow(htwttest2)){
+  score = htwttest2[i,"test"]
+  if (score >= 80){
+    htwttest2[i, "grade"] = "A"
+  }
+  else if (score >= 70){
+    htwttest2[i, "grade"] = "B"
+  }
+  else if (score >= 60){
+    htwttest2[i, "grade"] = "C"
+  }
+  else if (score >= 50){
+    htwttest2[i, "grade"] = "D"
+  }
+  else htwttest2[i, "grade"] = "F"
+}
+```
+
+Here are the 1st 5 rows of the dataset after grade assignment:
+
+```{r}
+htwttest2[1:5,]
+```
+
+8. Suppose a matrix $X=\left(\begin{array}{cc}{1} & {1} \\ {1} & {3} \\ {1} & {4} \\ {1} & {7} \\ {1} & {11}\end{array}\right)$ and $\underline{y}=\left(\begin{array}{c}{4} \\ {6} \\ {13} \\ {15} \\ {19}\end{array}\right)$.
+Define $\hat{\underline{\beta}}=\left(X^{\prime} X\right)^{-1} X^{\prime} \underline{y} .$ Using the matrix operations in $\mathrm{R}$ to find $\hat{\underline{\beta}}$.
+
+```{r}
+X <- cbind(c(1,1,1,1,1), c(1,3,4,7,11))
+y <- c(4,6,13,15,19)
+beta <- solve(t(X) %*% X) %*% t(X) %*% y
+X; y; beta
+```
+
+9. A sequence is generated using the following recursive relation
+$$x_{n}=x_{n-1}-2 x_{n-2} \quad \text{ for } n \geq 3,\ x_{1}=0 \text { and } x_{2}=2.$$
+(i) Use the loop function in R to find the 18th term of the series.
+(ii) Find the sum of the first 15 terms in this sequence.
+
+```{r}
+x_n_2 = 0
+x_n_1 = 2
+sum = x_n_2 + x_n_1
+
+for (i in 3:18){
+  x_n = x_n_1 - 2*x_n_2
+  
+  if (i == 18){
+    x_18 = x_n
+  }
+  if (i<=15){
+    sum = sum + x_n
+  }
+    
+  x_n_2 = x_n_1
+  x_n_1 = x_n
+}
+cat("The 18th term is", x_18, ". The sum of the first 15 terms in this sequence is", sum, ".")
+```
+
+10. Write a function that will calculate the mean, the second, the third and the fourth central moments a given data vector on variable $X .$
+The $r^{\text {th }}$ central moment for $r \geq 2$ is given by
+$$M_{r}=\frac{1}{n} \sum_{i=1}^{n}\left(X_{i}-\overline{X}\right)^{r}, \text { where } \overline{X}=\frac{1}{n} \sum_{i=1}^{n} X_{i}$$
+Hence obtain the mean, the second, the third and the fourth central moments for the height in the data frame `htwt2`.
+
+```{r}
+mean <- function(x){
+  n <- length(x)
+  return(sum(x) / n)
+}
+rth_moment <- function(r, x){
+  n <- length(x)
+  moment <- sum((x - mean(x)) ^ r) / n
+  return(moment)
+}
+calc_moments <- function(x){
+  stats <- c(mean(x), rth_moment(2,x), rth_moment(3,x), rth_moment(4,x))
+  return(stats)
+}
+
+cat("The first 4 central moments are", calc_moments(htwt2$height), "respectively.")
+```
