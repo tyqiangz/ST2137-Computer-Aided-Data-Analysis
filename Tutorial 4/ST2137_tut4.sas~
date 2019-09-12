@@ -1,0 +1,54 @@
+/* Q1a */
+
+/* Import the file wip.txt */
+data wip;
+	infile '~/ST2137_tut_4_data_set/wip.txt' firstobs = 2 delimiter = " ";
+	input time plant;
+
+/* extract the time for plant 1 from wip.txt */
+data plant1Time;
+	set wip;
+	where (plant = 1);
+
+/* extract the time for plant 2 from wip.txt */
+data plant2Time;
+	set wip;
+	where (plant = 2);
+	
+/* compute the descriptive statistics (mean, median, first quartile, third quartile, minimum, maximum, 
+	range, interquartile range, variance and standard deviation) for both plants
+*/
+
+/* Plant 1 descriptive stats */
+proc means data = plant1Time n mean median Q1 Q3 min max range qrange var stddev maxdec = 4;
+	title 'Descriptive statistics of time in for plant 1';
+	var time;
+
+/* Plant 2 descriptive stats */
+proc means data = plant2Time n mean median Q1 Q3 min max range qrange var stddev maxdec = 4;
+	title 'Descriptive statistics of time in for plant 1';
+	var time;
+	
+/* Q1b Draw histogram and boxplot for time variable of each plant from wip.txt*/
+
+/* This gives the histogram, boxplot and qqplot all at once */
+proc univariate data = plant1Time plot;
+	var time;
+	
+/* This gives only the histogram for the time of plant 1, more specification can be done here
+	SAS will also plot a normal curve on top of the histogram
+*/	
+proc univariate data = plant1Time;
+	var time;
+	histogram time / midpoints = 0 to 30 by 5 normal;
+
+proc univariate data = plant2Time;
+	var time;
+	histogram time / midpoints = 0 to 30 by 5 normal;
+
+/* Draw boxplot for the time of plant 1 and plant 2*/
+proc sgplot data = wip;
+	vbox time / category = plant;
+
+
+
